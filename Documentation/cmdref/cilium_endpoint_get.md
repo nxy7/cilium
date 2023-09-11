@@ -11,7 +11,9 @@ cilium endpoint get ( <endpoint identifier> | -l <endpoint labels> )  [flags]
 ### Examples
 
 ```
-cilium endpoint get 4598, cilium endpoint get pod-name:default:foobar, cilium endpoint get -l id.baz
+  ciliumctl endpoint get 4598
+  ciliumctl endpoint get pod-name:default:foobar
+  ciliumctl endpoint get -l id.baz
 ```
 
 ### Options

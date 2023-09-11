@@ -3,7 +3,7 @@
 
 package main
 
-import "github.com/cilium/cilium/cilium/cmd"
+import "github.com/cilium/cilium/ciliumctl/cmd"
 
 func main() {
 	cmd.Execute()

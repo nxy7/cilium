@@ -383,7 +383,7 @@ spec:
           for i in {1..5}; do \
             [ -S /var/run/cilium/monitor1_2.sock ] && break || sleep 10;\
             done; \
-          cilium monitor
+          ciliumctl monitor
         {{- range $type := .Values.monitor.eventTypes -}}
           {{ " " }}--type={{ $type }}
         {{- end }}

@@ -195,6 +195,7 @@ ci
 cidr
 cidrs
 ciliumcon
+ciliumctl
 classful
 classid
 cleanBpfState

@@ -11,8 +11,8 @@ cilium policy import <path> [flags]
 ### Examples
 
 ```
-  cilium policy import ~/policy.json
-  cilium policy import ./policies/app/
+  ciliumctl policy import ~/policy.json
+  ciliumctl policy import ./policies/app/
 ```
 
 ### Options
