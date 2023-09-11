@@ -151,6 +151,9 @@ for i in $(seq 1 10); do
     curl -s -o /dev/null "${LB_VIP}:80" || (echo "Failed $i"; exit -1)
 done
 
+# Give the agent some time to persist service update to the datapath
+sleep 5
+
 # Issue 10 requests to LB2
 for i in $(seq 1 10); do
     curl -s -o /dev/null "[${LB_ALT}]:80" || (echo "Failed $i"; exit -1)
