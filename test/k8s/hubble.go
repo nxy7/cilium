@@ -70,7 +70,7 @@ var _ = Describe("K8sAgentHubbleTest", func() {
 				Expect(err).To(BeNil())
 
 				// Extract annotation from endpoint model of pod. It does not have the l4proto, so we insert it manually.
-				cmd := fmt.Sprintf("cilium endpoint get pod-name:%s"+
+				cmd := fmt.Sprintf("ciliumctl endpoint get pod-name:%s"+
 					" -o jsonpath='{range [*].status.policy.proxy-statistics[*]}<{.location}/{.port}/%s/{.protocol}>{\"\\n\"}{end}'",
 					podName, strings.ToLower(l4proto))
 				err = kubectl.CiliumExecUntilMatch(ciliumPod, cmd, expectedProxyState)
@@ -158,7 +158,7 @@ var _ = Describe("K8sAgentHubbleTest", func() {
 		})
 
 		AfterFailed(func() {
-			kubectl.CiliumReport("cilium endpoint list")
+			kubectl.CiliumReport("ciliumctl endpoint list")
 		})
 
 		JustAfterEach(func() {

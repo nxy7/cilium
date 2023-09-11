@@ -33,7 +33,7 @@ const (
 	MaxRetries = 30
 )
 
-// BpfLBList returns the output of `cilium bpf lb list -o json` as a map
+// BpfLBList returns the output of `ciliumctl bpf lb list -o json` as a map
 // Key will be the frontend address and the value is an array with all backend
 // addresses
 func (s *SSHMeta) BpfLBList(noDuplicates bool) (map[string][]string, error) {
@@ -68,7 +68,7 @@ func (s *SSHMeta) BpfLBList(noDuplicates bool) (map[string][]string, error) {
 	return result, nil
 }
 
-// BpfIPCacheList returns the output of `cilium bpf ipcache list -o json` as a map
+// BpfIPCacheList returns the output of `ciliumctl bpf ipcache list -o json` as a map
 // Key will be the CIDR (address with mask) and the value is the associated numeric security identity
 func (s *SSHMeta) BpfIPCacheList(localScopeOnly bool) (map[string]uint32, error) {
 	var (
@@ -120,21 +120,21 @@ func (s *SSHMeta) BpfIPCacheList(localScopeOnly bool) (map[string]uint32, error)
 	return result, nil
 }
 
-// SelectedIdentities returns filtered identities from the output of `cilium policy selectors list
+// SelectedIdentities returns filtered identities from the output of `ciliumctl policy selectors list
 // -o json` as a string
 func (s *SSHMeta) SelectedIdentities(match string) string {
-	res := s.Exec(fmt.Sprintf(`cilium policy selectors list -o json | jq '.[] | select(.selector | test("%s")) | .identities[] | .'`, match))
+	res := s.Exec(fmt.Sprintf(`ciliumctl policy selectors list -o json | jq '.[] | select(.selector | test("%s")) | .identities[] | .'`, match))
 	res.ExpectSuccess("Failed getting identities for %s selectors", match)
 	return res.Stdout()
 }
 
 // ExecCilium runs a Cilium CLI command and returns the resultant cmdRes.
 func (s *SSHMeta) ExecCilium(cmd string) *CmdRes {
-	command := fmt.Sprintf("cilium %s", cmd)
+	command := fmt.Sprintf("ciliumctl %s", cmd)
 	return s.ExecWithSudo(command)
 }
 
-// EndpointGet returns the output of `cilium endpoint get` for the provided
+// EndpointGet returns the output of `ciliumctl endpoint get` for the provided
 // endpoint ID.
 func (s *SSHMeta) EndpointGet(id string) *models.Endpoint {
 	if id == "" {
@@ -211,7 +211,7 @@ func (s *SSHMeta) WaitEndpointsDeleted() bool {
 	// cilium-health endpoint is always running, as is the host endpoint.
 	desiredState := "2"
 	body := func() bool {
-		cmd := `cilium endpoint list -o json | jq '. | length'`
+		cmd := `ciliumctl endpoint list -o json | jq '. | length'`
 		res := s.Exec(cmd)
 		numEndpointsRunning := strings.TrimSpace(res.Stdout())
 		if numEndpointsRunning == desiredState {
@@ -224,7 +224,7 @@ func (s *SSHMeta) WaitEndpointsDeleted() bool {
 	err := WithTimeout(body, "Endpoints are not deleted after timeout", &TimeoutConfig{Timeout: HelperTimeout})
 	if err != nil {
 		logger.WithError(err).Warn("Endpoints are not deleted after timeout")
-		s.Exec("cilium endpoint list") // This function is only for debugging.
+		s.Exec("ciliumctl endpoint list") // This function is only for debugging.
 		return false
 	}
 	return true
@@ -283,7 +283,7 @@ func (s *SSHMeta) WaitEndpointsReady() bool {
 	desiredState := string(models.EndpointStateReady)
 	body := func() bool {
 		filter := `{range [*]}{@.id}{"="}{@.status.state},{@.status.identity.id}{"\n"}{end}`
-		cmd := fmt.Sprintf(`cilium endpoint list -o jsonpath='%s'`, filter)
+		cmd := fmt.Sprintf(`ciliumctl endpoint list -o jsonpath='%s'`, filter)
 
 		res := s.Exec(cmd)
 		if !res.WasSuccessful() {
@@ -315,7 +315,7 @@ func (s *SSHMeta) WaitEndpointsReady() bool {
 	err := WithTimeout(body, "Endpoints are not ready after timeout", &TimeoutConfig{Timeout: HelperTimeout})
 	if err != nil {
 		logger.WithError(err).Warn("Endpoints are not ready after timeout")
-		s.Exec("cilium endpoint list") // This function is only for debugging into log.
+		s.Exec("ciliumctl endpoint list") // This function is only for debugging into log.
 		return false
 	}
 	return true
@@ -350,7 +350,7 @@ func (s *SSHMeta) EndpointSetConfig(id, option, value string) bool {
 }
 
 // ListEndpoints returns the CmdRes resulting from executing
-// `cilium endpoint list -o json`.
+// `ciliumctl endpoint list -o json`.
 func (s *SSHMeta) ListEndpoints() *CmdRes {
 	return s.ExecCilium("endpoint list -o json")
 }
@@ -385,7 +385,7 @@ func (s *SSHMeta) GetAllEndpointsIds() (map[string]string, error) {
 // corresponding endpoint ID, and an error if the list of endpoints cannot be
 // retrieved via the Cilium CLI.
 func (s *SSHMeta) GetEndpointsIds() (map[string]string, error) {
-	// cilium endpoint list -o jsonpath='{range [?(@.status.labels.security-relevant[0]!='reserved:health')]}{@.status.external-identifiers.container-name}{"="}{@.id}{"\n"}{end}'
+	// ciliumctl endpoint list -o jsonpath='{range [?(@.status.labels.security-relevant[0]!='reserved:health')]}{@.status.external-identifiers.container-name}{"="}{@.id}{"\n"}{end}'
 	filter := `{range [?(@.status.labels.security-relevant[0]!="reserved:health")]}{@.status.external-identifiers.container-name}{"="}{@.id}{"\n"}{end}`
 	cmd := fmt.Sprintf("endpoint list -o jsonpath='%s'", filter)
 	endpoints := s.ExecCilium(cmd)
@@ -411,7 +411,7 @@ func (s *SSHMeta) GetEndpointsIdentityIds() (map[string]string, error) {
 func (s *SSHMeta) GetEndpointsNames() ([]string, error) {
 	data := s.ListEndpoints()
 	if !data.WasSuccessful() {
-		return nil, fmt.Errorf("`cilium endpoint list` was not successful")
+		return nil, fmt.Errorf("`ciliumctl endpoint list` was not successful")
 	}
 
 	result, err := data.Filter("{ [?(@.status.labels.security-relevant[0]!='reserved:health')].status.external-identifiers.container-name }")
@@ -438,7 +438,7 @@ func (s *SSHMeta) BasePath() string {
 // called the command will stop and monitor's output is saved on
 // `monitorLogFileName` file.
 func (s *SSHMeta) MonitorStart(opts ...string) (*CmdRes, func() error) {
-	cmd := "cilium monitor -vv " + strings.Join(opts, " ") + " | ts '[%Y-%m-%d %H:%M:%S]'"
+	cmd := "ciliumctl monitor -vv " + strings.Join(opts, " ") + " | ts '[%Y-%m-%d %H:%M:%S]'"
 	ctx, cancel := context.WithCancel(context.Background())
 	res := s.ExecInBackground(ctx, cmd, ExecOptions{SkipLog: true})
 
@@ -487,7 +487,7 @@ func (s *SSHMeta) PolicyEndpointsSummary() (map[string]int, error) {
 	endpoints, err := res.Filter("{ [?(@.status.labels.security-relevant[0]!='reserved:health')].status.policy.realized.policy-enabled }")
 
 	if err != nil {
-		return result, fmt.Errorf(`cannot filter for "policy-enabled" from output of "cilium endpoint list"`)
+		return result, fmt.Errorf(`cannot filter for "policy-enabled" from output of "ciliumctl endpoint list"`)
 	}
 	status := strings.Split(endpoints.String(), " ")
 	for _, kind := range status {
@@ -546,7 +546,7 @@ func (s *SSHMeta) PolicyDel(id string) *CmdRes {
 	return s.PolicyWait(policyID)
 }
 
-// PolicyGet runs `cilium policy get <id>`, where id is the name of a specific
+// PolicyGet runs `ciliumctl policy get <id>`, where id is the name of a specific
 // policy imported into Cilium. It returns the resultant CmdRes from running
 // the aforementioned command.
 func (s *SSHMeta) PolicyGet(id string) *CmdRes {
@@ -658,7 +658,7 @@ func (s *SSHMeta) GetFilePath(filename string) string {
 	return fmt.Sprintf("%s/%s", s.basePath, filename)
 }
 
-// PolicyWait executes `cilium policy wait`, which waits until all endpoints are
+// PolicyWait executes `ciliumctl policy wait`, which waits until all endpoints are
 // updated to the given policy revision.
 func (s *SSHMeta) PolicyWait(revisionNum int) *CmdRes {
 	return s.ExecCilium(fmt.Sprintf("policy wait %d", revisionNum))
@@ -896,12 +896,12 @@ func (s *SSHMeta) ServiceIsSynced(id int) (bool, error) {
 	return true, nil
 }
 
-// ServiceList returns the output of  `cilium service list`
+// ServiceList returns the output of  `ciliumctl service list`
 func (s *SSHMeta) ServiceList() *CmdRes {
 	return s.ExecCilium("service list -o json")
 }
 
-// ServiceGet is a wrapper around `cilium service get <id>`. It returns the
+// ServiceGet is a wrapper around `ciliumctl service get <id>`. It returns the
 // result of retrieving said service.
 func (s *SSHMeta) ServiceGet(id int) *CmdRes {
 	return s.ExecCilium(fmt.Sprintf("service get '%d' -o json", id))
@@ -941,13 +941,13 @@ func (s *SSHMeta) ServiceGetIds() ([]string, error) {
 	return strings.Split(trimmed, "\n"), nil
 }
 
-// ServiceDel is a wrapper around `cilium service delete <id>`. It returns the
+// ServiceDel is a wrapper around `ciliumctl service delete <id>`. It returns the
 // result of deleting said service.
 func (s *SSHMeta) ServiceDel(id int) *CmdRes {
 	return s.ExecCilium(fmt.Sprintf("service delete '%d'", id))
 }
 
-// ServiceDelAll is a wrapper around `cilium service delete --all`. It returns the
+// ServiceDelAll is a wrapper around `ciliumctl service delete --all`. It returns the
 // result of the command.
 func (s *SSHMeta) ServiceDelAll() *CmdRes {
 	return s.ExecCilium("service delete --all")
@@ -1006,8 +1006,8 @@ func (s *SSHMeta) SetUpCiliumWithHubble() error {
 	return s.SetUpCiliumWithOptions("--enable-hubble")
 }
 
-// WaitUntilReady waits until the output of `cilium status` returns with code
-// zero. Returns an error if the output of `cilium status` returns a nonzero
+// WaitUntilReady waits until the output of `ciliumctl status` returns with code
+// zero. Returns an error if the output of `ciliumctl status` returns a nonzero
 // return code after the specified timeout duration has elapsed.
 func (s *SSHMeta) WaitUntilReady(timeout time.Duration) error {
 

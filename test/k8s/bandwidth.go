@@ -58,7 +58,7 @@ var _ = SkipDescribeIf(helpers.DoesNotRunOnNetNextKernel, "K8sDatapathBandwidthT
 		)
 
 		AfterFailed(func() {
-			kubectl.CiliumReport("cilium bpf bandwidth list", "cilium endpoint list")
+			kubectl.CiliumReport("ciliumctl bpf bandwidth list", "ciliumctl endpoint list")
 		})
 
 		JustAfterEach(func() {

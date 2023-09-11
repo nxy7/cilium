@@ -33,7 +33,7 @@ var _ = SkipDescribeIf(helpers.RunsOn54Kernel, "K8sAgentChaosTest", func() {
 	})
 
 	AfterFailed(func() {
-		kubectl.CiliumReport("cilium service list", "cilium endpoint list")
+		kubectl.CiliumReport("ciliumctl service list", "ciliumctl endpoint list")
 	})
 
 	JustAfterEach(func() {

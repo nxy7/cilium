@@ -617,8 +617,8 @@ var _ = Describe("RuntimeAgentPolicies", func() {
 				hubbleRes := vm.HubbleObserveFollow(ctx, "--type", "policy-verdict", "--type", "trace:to-endpoint", "--protocol", "ICMPv4")
 				defer cancel()
 
-				By("Starting cilium monitor in background")
-				monitorRes := vm.ExecInBackground(ctx, "cilium monitor --type policy-verdict")
+				By("Starting ciliumctl monitor in background")
+				monitorRes := vm.ExecInBackground(ctx, "ciliumctl monitor --type policy-verdict")
 
 				By("Creating an endpoint")
 				endpointID, endpointIP := createEndpoint()
@@ -643,13 +643,13 @@ var _ = Describe("RuntimeAgentPolicies", func() {
 					fmt.Sprintf(`["reserved:host"] -> %s ["container:somelabel"] %s : FORWARDED 4`, endpointID, endpointIP.IPV4),
 					"No ingress traffic to endpoint")
 
-				By("Testing cilium monitor output")
+				By("Testing ciliumctl monitor output")
 				auditVerdict := fmt.Sprintf("local EP ID %s, remote ID host, proto 1, ingress, action audit", endpointID)
 				monitorRes.WaitUntilMatch(auditVerdict)
 				monitorRes.ExpectContains(auditVerdict, "No ingress policy log record")
 
-				By("Testing cilium endpoint list output")
-				res = vm.Exec("cilium endpoint list")
+				By("Testing ciliumctl endpoint list output")
+				res = vm.Exec("ciliumctl endpoint list")
 				res.ExpectMatchesRegexp(endpointID+"\\s*Disabled \\(Audit\\)\\s*Disabled \\(Audit\\)", "Endpoint is not in audit mode")
 			})
 
@@ -661,8 +661,8 @@ var _ = Describe("RuntimeAgentPolicies", func() {
 				hubbleRes := vm.HubbleObserveFollow(ctx, "--type", "policy-verdict", "--type", "trace:to-endpoint", "--protocol", "ICMPv4")
 				defer cancel()
 
-				By("Starting cilium monitor in background")
-				monitorRes := vm.ExecInBackground(ctx, "cilium monitor --type policy-verdict")
+				By("Starting ciliumctl monitor in background")
+				monitorRes := vm.ExecInBackground(ctx, "ciliumctl monitor --type policy-verdict")
 
 				By("Creating an endpoint")
 				endpointID, _ := createEndpoint("ping", hostIP)
@@ -683,13 +683,13 @@ var _ = Describe("RuntimeAgentPolicies", func() {
 					fmt.Sprintf(`%s -> ["reserved:host"] %s : AUDIT 5`, endpointID, hostIP),
 					"Default policy verdict on egress failed")
 
-				By("Testing cilium monitor output")
+				By("Testing ciliumctl monitor output")
 				auditVerdict := fmt.Sprintf("ID %s, remote ID host, proto 1, egress, action audit", endpointID)
 				monitorRes.WaitUntilMatch(auditVerdict)
 				monitorRes.ExpectContains(auditVerdict, "No egress policy log record")
 
-				By("Testing cilium endpoint list output")
-				res := vm.Exec("cilium endpoint list")
+				By("Testing ciliumctl endpoint list output")
+				res := vm.Exec("ciliumctl endpoint list")
 				res.ExpectMatchesRegexp(endpointID+"\\s*Disabled \\(Audit\\)\\s*Disabled \\(Audit\\)", "Endpoint is not in audit mode")
 			})
 		})
