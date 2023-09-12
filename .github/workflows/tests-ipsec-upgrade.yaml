@@ -238,7 +238,7 @@ jobs:
 
             ./cilium-cli status --wait
             kubectl get pods --all-namespaces -o wide
-            kubectl -n kube-system exec daemonset/cilium -- cilium status
+            kubectl -n kube-system exec daemonset/cilium -- ciliumctl status
 
       - name: Test Cilium ${{ steps.vars.outputs.downgrade_version }} (${{ matrix.name }})
         uses: cilium/little-vm-helper@908ab1ff8a596a03cd5221a1f8602dc44c3f906d # v0.0.12
@@ -274,7 +274,7 @@ jobs:
 
             ./cilium-cli status --wait
             kubectl get pods --all-namespaces -o wide
-            kubectl -n kube-system exec daemonset/cilium -- cilium status
+            kubectl -n kube-system exec daemonset/cilium -- ciliumctl status
 
       - name: Downgrade Cilium to ${{ steps.vars.outputs.downgrade_version }} & Test (${{ matrix.name }})
         uses: cilium/cilium/.github/actions/conn-disrupt-test@ccaaa85a6599c0781b376b2f870bcad243a9eee3
@@ -291,7 +291,7 @@ jobs:
 
             ./cilium-cli status --wait
             kubectl get pods --all-namespaces -o wide
-            kubectl -n kube-system exec daemonset/cilium -- cilium status
+            kubectl -n kube-system exec daemonset/cilium -- ciliumctl status
 
       - name: Fetch artifacts
         if: ${{ !success() }}
