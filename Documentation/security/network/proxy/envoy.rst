@@ -478,7 +478,7 @@ Use ''cilium endpoint list'' to identify the IP address of the protocol server.
 
 .. code-block:: shell-session
 
-  $ cilium endpoint list
+  $ ciliumctl endpoint list
   ENDPOINT   POLICY (ingress)   POLICY (egress)   IDENTITY   LABELS (source:key[=value])   IPv6                 IPv4            STATUS   
              ENFORCEMENT        ENFORCEMENT                                                                                     
   2987       Disabled           Disabled          31423      container:id=cass-server      f00d::a0b:0:0:bab    10.11.51.247    ready   
@@ -517,9 +517,9 @@ one would run:
 
 .. code-block:: shell-session
 
-    $ cilium policy import cass-allow-all.json
+    $ ciliumctl policy import cass-allow-all.json
     Revision: 1
-    $ cilium endpoint list
+    $ ciliumctl endpoint list
     ENDPOINT   POLICY (ingress)   POLICY (egress)   IDENTITY   LABELS (source:key[=value])   IPv6                 IPv4            STATUS   
                ENFORCEMENT        ENFORCEMENT                                                                                     
     2987       Enabled            Disabled          31423      container:id=cass-server      f00d::a0b:0:0:bab    10.11.51.247    ready   
@@ -532,7 +532,7 @@ To remove this or any other policy, run:
 
 .. code-block:: shell-session
 
-    $ cilium policy delete --all 
+    $ ciliumctl policy delete --all 
 
 To install a new policy, first delete, and then run ''cilium policy import'' again.  For example, the following policy would allow
 select statements on a specific set of tables to this Cassandra server, but deny all other queries. 

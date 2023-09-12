@@ -435,7 +435,7 @@ to enable NFS.
 
    VirtualBox for Ubuntu desktop might have network issues after
    suspending and resuming the host OS (typically by closing and
-   re-opening the laptop lid). If the ``cilium status`` keeps showing
+   re-opening the laptop lid). If the ``ciliumctl status`` keeps showing
    unreachable from nodes but reachable from endpoints, you could
    hit this. Run the following code on each VM to rebuild routing
    and neighbor entries:
@@ -511,7 +511,7 @@ commands, respectively:
 .. code-block:: shell-session
 
     $ sudo systemctl status cilium
-    $ cilium status
+    $ ciliumctl status
 
 Simple smoke-test with HTTP policies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -868,11 +868,11 @@ Debugging
 Datapath code
 ~~~~~~~~~~~~~
 
-The tool ``cilium monitor`` can also be used to retrieve debugging information
+The tool ``ciliumctl monitor`` can also be used to retrieve debugging information
 from the eBPF based datapath. To enable all log messages:
 
 - Start the ``cilium-agent`` with ``--debug-verbose=datapath``, or
-- Run ``cilium config debug=true debugLB=true`` from an already running agent.
+- Run ``ciliumctl config debug=true debugLB=true`` from an already running agent.
 
 These options enable logging functions in the datapath: ``cilium_dbg()``,
 ``cilium_dbg_lb()`` and ``printk()``.
@@ -886,7 +886,7 @@ These options enable logging functions in the datapath: ``cilium_dbg()``,
 
 The image below shows the options that could be used as startup options by
 ``cilium-agent`` (see upper blue box) or could be changed at runtime by running
-``cilium config <option(s)>`` for an already running agent (see lower blue box).
+``ciliumctl config <option(s)>`` for an already running agent (see lower blue box).
 Along with each option, there is one or more logging function associated with it:
 ``cilium_dbg()`` and ``printk()``, for ``DEBUG`` and ``cilium_dbg_lb()`` for
 ``DEBUG_LB``.
@@ -898,17 +898,17 @@ Along with each option, there is one or more logging function associated with it
 .. note::
 
    If you need to enable the ``LB_DEBUG`` for an already running agent by running
-   ``cilium config debugLB=true``, you must pass the option ``debug=true`` along.
+   ``ciliumctl config debugLB=true``, you must pass the option ``debug=true`` along.
 
 Debugging of an individual endpoint can be enabled by running
-``cilium endpoint config ID debug=true``. Running ``cilium monitor -v`` will
+``ciliumctl endpoint config ID debug=true``. Running ``ciliumctl monitor -v`` will
 print the normal form of monitor output along with debug messages:
 
 .. code-block:: shell-session
 
-   $ cilium endpoint config 731 debug=true
+   $ ciliumctl endpoint config 731 debug=true
    Endpoint 731 configuration updated successfully
-   $ cilium monitor -v
+   $ ciliumctl monitor -v
    Press Ctrl-C to quit
    level=info msg="Initializing dissection cache..." subsys=monitor
    <- endpoint 745 flow 0x6851276 identity 4->0 state new ifindex 0 orig-ip 0.0.0.0: 8e:3c:a3:67:cc:1e -> 16:f9:cd:dc:87:e5 ARP
@@ -927,9 +927,9 @@ Passing ``-v -v`` supports deeper detail, for example:
 
 .. code-block:: shell-session
 
-    $ cilium endpoint config 3978 debug=true
+    $ ciliumctl endpoint config 3978 debug=true
     Endpoint 3978 configuration updated successfully
-    $ cilium monitor -v -v --hex
+    $ ciliumctl monitor -v -v --hex
     Listening for events on 2 CPUs with 64x4096 of shared memory
     Press Ctrl-C to quit
     ------------------------------------------------------------------------------
@@ -965,13 +965,13 @@ endpoints appearing in the "not-ready" state and never switching out of it:
 
 .. code-block:: shell-session
 
-    $ cilium endpoint list
+    $ ciliumctl endpoint list
     ENDPOINT   POLICY        IDENTITY   LABELS (source:key[=value])   IPv6                     IPv4            STATUS
                ENFORCEMENT
     48896      Disabled      266        container:id.server           fd02::c0a8:210b:0:bf00   10.11.13.37     not-ready
     60670      Disabled      267        container:id.client           fd02::c0a8:210b:0:ecfe   10.11.167.158   not-ready
 
-Running ``cilium endpoint get`` for one of the endpoints will provide a
+Running ``ciliumctl endpoint get`` for one of the endpoints will provide a
 description of known state about it, which includes eBPF verification logs.
 
 The files under ``/var/run/cilium/state`` provide context about how the eBPF
