@@ -1436,6 +1436,9 @@ int cil_to_netdev(struct __ctx_buff *ctx __maybe_unused)
 #endif
 
 #ifdef ENABLE_HOST_FIREWALL
+	if (ctx_snat_done(ctx))
+		goto skip_host_firewall;
+
 	if (!validate_ethertype(ctx, &proto)) {
 		ret = DROP_UNSUPPORTED_L2;
 		goto out;
@@ -1468,6 +1471,8 @@ out:
 	if (IS_ERR(ret))
 		return send_drop_notify_error_ext(ctx, 0, ret, ext_err,
 						  CTX_ACT_DROP, METRIC_EGRESS);
+
+skip_host_firewall:
 #endif /* ENABLE_HOST_FIREWALL */
 
 #if defined(ENABLE_BANDWIDTH_MANAGER)
@@ -1536,7 +1541,9 @@ out:
 	}
 #endif
 
-__maybe_unused exit:
+#ifdef ENABLE_HEALTH_CHECK
+exit:
+#endif
 	if (IS_ERR(ret))
 		return send_drop_notify_error_ext(ctx, 0, ret, ext_err,
 						  CTX_ACT_DROP, METRIC_EGRESS);
