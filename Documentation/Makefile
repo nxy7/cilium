@@ -23,6 +23,8 @@ define build_image
     | $(CONTAINER_ENGINE) build $(DOCKER_BUILD_FLAGS) --target $(2) --tag $(3) -
 endef
 
+##@ Development Images
+
 DOCS_BASE_IMG ?= cilium/docs-base
 base-image: Dockerfile ## Build the docs-base image for updating the requirements.txt file.
 	$(call build_image,$<,docs-base,$(DOCS_BASE_IMG))
@@ -57,6 +59,8 @@ DOCKER_CTR := $(DOCKER_CTR_BASE) \
 		--user "$(shell id -u):$(shell id -g)"
 DOCKER_RUN := $(DOCKER_CTR) $(DOCS_BUILDER_IMG)
 
+##@ Auto-generated Contents Updates and Validation
+
 update-cmdref: builder-image cilium-build ## Update the command reference documents (agent, bugtool, operators, etc.).
 	@$(ECHO_GEN)cmdref
 	-$(QUIET)rm -rf cmdref/cilium*.md
@@ -67,7 +71,7 @@ codeowners.rst: $(ROOT_DIR)/CODEOWNERS
 	$(QUIET)$(DOCKER_RUN) ./update-codeowners.sh
 
 .PHONY: update-codeowners
-update-codeowners: codeowners.rst
+update-codeowners: codeowners.rst ## Update the description of the code owner teams.
 
 check: builder-image update-cmdref update-helm-values update-codeowners ## Validate command and Helm references, as well as policy examples.
 	@$(ECHO_CHECK) cmdref
@@ -78,10 +82,6 @@ check: builder-image update-cmdref update-helm-values update-codeowners ## Valid
 	$(QUIET)$(DOCKER_RUN) ./check-examples.sh
 	@$(ECHO_CHECK) codeowners.rst
 	$(QUIET) ./check-codeowners.sh
-
-ifeq ($(V),0)
-SPHINX_OPTS += -q
-endif
 
 update-helm-values: $(HELM_VALUES) ## Update the Helm reference documentation.
 
@@ -104,6 +104,12 @@ $(HELM_VALUES): FORCE
 	$(QUIET)printf '..\n  %s\n\n%s\n' "AUTO-GENERATED. Please DO NOT edit manually." "$$(cat $(TMP_FILE_3))" > $@
 	$(QUIET)$(RM) -- $(TMP_FILE_1) $(TMP_FILE_2) $(TMP_FILE_3)
 
+##@ Build
+
+ifeq ($(V),0)
+SPHINX_OPTS += -q
+endif
+
 epub latex html: builder-image ## Check documentation and render it under the specified format.
 	@$(ECHO_GEN)_build/$@
 	$(QUIET)$(DOCKER_RUN) ./check-build.sh $(@) $(SPHINX_OPTS)
@@ -121,7 +127,9 @@ live-preview: builder-image ## Build and serve the documentation locally.
 			$(DOCS_BUILDER_IMG) \
 		sphinx-autobuild --open-browser --host 0.0.0.0 $(SPHINX_OPTS) --ignore *.swp -Q . _preview
 
-update-requirements: base-image $(REQUIREMENTS_NODEP)
+##@ Development
+
+update-requirements: base-image $(REQUIREMENTS_NODEP) ## Regenerate the requirements.txt file from requirements-min/requirements.txt.
 	@echo '## Auto-generated from $(REQUIREMENTS_NODEP) with "make update-requirements"' > $(REQUIREMENTS)
 	$(QUIET)$(DOCKER_CTR_BASE) $(DOCS_BASE_IMG) \
 		bash -c "pip install -r $(REQUIREMENTS_NODEP) && pip freeze -r $(REQUIREMENTS_NODEP) >> $(REQUIREMENTS)"
