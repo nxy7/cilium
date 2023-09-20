@@ -1,3 +1,11 @@
+# v1.119.0 (2023-09-19)
+
+* **Feature**: This release adds support for C7i, and R7a instance types.
+
+# v1.118.0 (2023-09-12)
+
+* **Feature**: This release adds support for restricting public sharing of AMIs through AMI Block Public Access
+
 # v1.117.0 (2023-09-06)
 
 * **Feature**: This release adds 'outpost' location type to the DescribeInstanceTypeOfferings API, allowing customers that have been allowlisted for outpost to query their offerings in the API.
